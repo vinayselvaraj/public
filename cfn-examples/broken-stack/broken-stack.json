@@ -1,0 +1,34 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "broken-stack",
+  
+  "Resources": {
+    
+    "instanceSG" : {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Security group for instances.",
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": 80,
+            "ToPort": 80
+          }
+        ]
+      }
+    },
+    
+    "ChildStackA" : {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": "https://raw.githubusercontent.com/vinayselvaraj/public/master/cfn-examples/broken-stack/broken-stack-child.json",
+        "Parameters" : {
+          "SecurityGroupName" : { "Ref" : "instanceSG" }
+          }
+        }
+      }
+    }
+    
+  }
+}
