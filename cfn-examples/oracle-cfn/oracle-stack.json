@@ -1,0 +1,175 @@
+{
+   "AWSTemplateFormatVersion" : "2010-09-09",
+   "Description" : "Oracle DB Stack",
+   
+   "Parameters" : {
+     "KeyName": {
+       "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instances",
+       "Type": "String",
+       "Default": "default",
+       "MinLength": "1",
+       "MaxLength": "255",
+       "AllowedPattern" : "[\\x20-\\x7E]*",
+       "ConstraintDescription" : "can contain only ASCII characters."
+     },
+     
+     "FileServerInstanceType" : {
+       "Description" : "FileServer Server EC2 instance type",
+       "Type" : "String",
+       "Default" : "t1.micro",
+       "AllowedValues" : [ "t1.micro","m1.small","m1.medium","m1.large","m1.xlarge","m2.xlarge","m2.2xlarge","m2.4xlarge","m3.xlarge","m3.2xlarge","c1.medium","c1.xlarge","cc1.4xlarge","cc2.8xlarge","cg1.4xlarge"],
+       "ConstraintDescription" : "must be a valid EC2 instance type."
+     },
+     
+     "FileServerEBSVolumeSize" : {
+       "Description" : "FileServer Server EBS volume size",
+       "Type" : "Number",
+       "Default" : "100",
+       "MinValue" : "5",
+       "MaxValue" : "1024",
+       "ConstraintDescription" : "must be between 5 and 1024 Gb."
+     }
+   },
+   
+   "Mappings" : {
+     "AWSInstanceType2Arch" : {
+       "t1.micro"    : { "Arch" : "64" },
+       "m1.small"    : { "Arch" : "64" },
+       "m1.medium"   : { "Arch" : "64" },
+       "m1.large"    : { "Arch" : "64" },
+       "m1.xlarge"   : { "Arch" : "64" },
+       "m2.xlarge"   : { "Arch" : "64" },
+       "m2.2xlarge"  : { "Arch" : "64" },
+       "m2.4xlarge"  : { "Arch" : "64" },
+       "m3.xlarge"   : { "Arch" : "64" },
+       "m3.2xlarge"  : { "Arch" : "64" },
+       "c1.medium"   : { "Arch" : "64" },
+       "c1.xlarge"   : { "Arch" : "64" },
+       "cc1.4xlarge" : { "Arch" : "64HVM" },
+       "cc2.8xlarge" : { "Arch" : "64HVM" },
+       "cg1.4xlarge" : { "Arch" : "64HVM" }
+     },
+
+     "AWSRegionArch2AMI" : {
+       "us-east-1"      : { "32" : "ami-a0cd60c9", "64" : "ami-aecd60c7", "64HVM" : "ami-a8cd60c1" },
+       "us-west-2"      : { "32" : "ami-46da5576", "64" : "ami-48da5578", "64HVM" : "NOT_YET_SUPPORTED" },
+       "us-west-1"      : { "32" : "ami-7d4c6938", "64" : "ami-734c6936", "64HVM" : "NOT_YET_SUPPORTED" },
+       "eu-west-1"      : { "32" : "ami-61555115", "64" : "ami-6d555119", "64HVM" : "ami-67555113" },
+       "ap-southeast-1" : { "32" : "ami-220b4a70", "64" : "ami-3c0b4a6e", "64HVM" : "NOT_YET_SUPPORTED" },
+       "ap-southeast-2" : { "32" : "ami-b3990e89", "64" : "ami-bd990e87", "64HVM" : "NOT_YET_SUPPORTED" },
+       "ap-northeast-1" : { "32" : "ami-2a19aa2b", "64" : "ami-2819aa29", "64HVM" : "NOT_YET_SUPPORTED" },
+       "sa-east-1"      : { "32" : "ami-f836e8e5", "64" : "ami-fe36e8e3", "64HVM" : "NOT_YET_SUPPORTED" }
+     }
+   },
+   
+   "Resources" : {
+     
+     "FileServerEBSVolume" : {
+       "Type" : "AWS::EC2::Volume",
+       "Properties" : {
+         "Size" : { "Ref" : "FileServerEBSVolumeSize" },
+         "AvailabilityZone" : { "Fn::GetAtt" : [ "FileServerInstance", "AvailabilityZone" ]}
+       }
+     },
+     
+    "FileServerEBSAttachment" : {
+       "Type" : "AWS::EC2::VolumeAttachment",
+       "Properties" : {
+         "InstanceId" : { "Ref" : "FileServerInstance" },
+         "VolumeId"  : { "Ref" : "FileServerEBSVolume" },
+         "Device" : "/dev/sdh"
+       }
+    },
+     
+     "FileServerInstance" : {
+       "Type" : "AWS::EC2::Instance",
+       "Metadata" : {
+         "AWS::CloudFormation::Init" : {
+           "config" : {
+             "packages" : {
+               "yum" : {
+                 "nfs-utils" : [],
+                 "portmap" : []
+               }
+             },
+             "files" : {
+               "/etc/exports" : {
+                 "content" : { "Fn::Join" : ["", [
+                   "/opt/app/oracle/exports *(rw,sync,no_wdelay,insecure_locks,no_root_squash)"
+                   ]]},
+                   "mode"  : "000644",
+                   "owner" : "root",
+                   "group" : "root"
+               }
+             },
+             "services" : {
+               "sysvinit" : {
+                 "portmap" : {
+                   "enabled" : "true",
+                   "ensureRunning" : "true"
+                 },
+                 "nfs" : {
+                   "enabled" : "true",
+                   "ensureRunning" : "true",
+                   "files" : ["/etc/exports"]
+                 }
+               }
+             }
+           }
+         }
+       },
+       "Properties" : {
+         "ImageId" : {
+           "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "FileServerInstanceType" }, "Arch" ] } ] },
+           "KeyName" : { "Ref" : "KeyName" },
+           "InstanceType"   : { "Ref" : "FileServerInstanceType" },
+           "Tags" : [{ "Key" : "Name", "Value": "FileServer" }],
+           "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
+             
+             "#!/bin/bash -v\n",
+             "yum -y update\n",
+             
+             "# Helper function\n",
+             "function error_exit\n",
+             "{\n",
+             "  /opt/aws/bin/cfn-signal -e 1 -r \"$1\" '", { "Ref" : "FileServerInstanceWaitHandle" }, "'\n",
+             "  exit 1\n",
+             "}\n",
+             
+             "# Wait for the EBS volume to show up\n",
+             "while [ ! -e /dev/sdh ]; do echo Waiting for EBS volume to attach; sleep 5; done\n",
+             
+             "# Format the EBS volume and mount it\n",
+             "mkdir -p /opt/app/oracle/exports\n",
+             "/sbin/mkfs -t ext3 /dev/xvdh\n",
+             
+             "/opt/aws/bin/cfn-init -s ", { "Ref" : "AWS::StackId" }, " -r FileServerInstance ",
+   	 	       "    --region ", { "Ref" : "AWS::Region" }, " || error_exit 'Failed to run cfn-init'\n",
+             
+             "/sbin/service nfs restart\n",
+              
+             "# If all is well so signal success\n",
+             "/opt/aws/bin/cfn-signal -e $? -r \"Setup Complete\" '", { "Ref" : "FileServerInstanceWaitHandle" }, "'\n"
+             
+           ]]}}
+         }
+      },
+      
+      "FileServerInstanceWaitHandle" : {
+        "Type" : "AWS::CloudFormation::WaitConditionHandle"
+      },
+      
+      "FileServerInstanceWaitCondition" : {
+        "Metadata" : {
+          "Comment1" : "Note that the WaitCondition is dependent on the volume mount point allowing the volume to be created and attached to the EC2 instance",
+          "Comment2" : "The instance bootstrap script waits for the volume to be attached to the instance prior to installing Gollum and signalling completion"
+        },
+        "Type" : "AWS::CloudFormation::WaitCondition",
+        "DependsOn" : "FileServerEBSAttachment",
+        "Properties" : {
+          "Handle" : {"Ref" : "FileServerInstanceWaitHandle"},
+          "Timeout" : "1800"
+        }
+      }   
+   }
+}  
