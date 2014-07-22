@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>D05E220F-C261-421A-9280-41C244BA4E4E</string>
+	<key>IDESourceControlProjectName</key>
+	<string>SNSTest</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>92C3F1D0-AFE0-4CAB-85BC-36AEA5D09D67</key>
+		<string>ssh://bitbucket.org/vinayselvaraj/home.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>projects/SNSTest/SNSTest.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>92C3F1D0-AFE0-4CAB-85BC-36AEA5D09D67</key>
+		<string>../../../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>ssh://bitbucket.org/vinayselvaraj/home.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>110</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>92C3F1D0-AFE0-4CAB-85BC-36AEA5D09D67</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>92C3F1D0-AFE0-4CAB-85BC-36AEA5D09D67</string>
+			<key>IDESourceControlWCCName</key>
+			<string>home</string>
+		</dict>
+	</array>
+</dict>
+</plist>

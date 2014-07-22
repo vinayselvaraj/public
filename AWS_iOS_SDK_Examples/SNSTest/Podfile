@@ -1,0 +1,3 @@
+platform :ios, '7.0'
+
+pod 'AWSiOSSDK', '~> 1.7.1'
